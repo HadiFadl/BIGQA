@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Data;
 using System;
+using System.Threading.Tasks;
 
 namespace BIGDQ
 {
@@ -20,6 +21,45 @@ namespace BIGDQ
         }
 
         #region Wrappers
+
+        #region Parallel
+        public static Dictionary<string, object> ParallelFilter(Dictionary<string, object> data_unit, List<string> data_elements)
+        {
+            Dictionary<string, object> new_data_unit = data_unit;
+
+            Parallel.ForEach(data_elements, element =>
+            {
+                new_data_unit.Remove(element);
+            });
+
+            return new_data_unit;
+        }
+
+        public static BaseMeasure ParallelBaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, double rule_weight,
+            Dictionary<string, object> reference_data = null, string reference_key = null)
+        {
+
+            if (rule_weight <= 0 || rule_weight > 1)
+                throw new Exception("weight value must be between 0 and 1");
+
+            if (reference_data != null)
+                throw new NotImplementedException();
+
+            int score = 0;
+
+            Parallel.ForEach(data_units, unit =>
+            {
+                string key = Block(unit, quality_rule).ToString();
+
+                if (Evaluate(quality_rule, key))
+                    score += 1;
+
+            });
+
+            return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
+        }
+
+        #endregion
 
         public static List<Dictionary<string, object>> Sample(List<Dictionary<string, object>> data_units, double ratio)
         {
@@ -73,6 +113,7 @@ namespace BIGDQ
         {
             return derived_measures.Sum(x => x.Score * x.Weight);
         }
+
         #endregion
 
         #region Enhancers
