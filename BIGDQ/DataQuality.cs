@@ -26,7 +26,7 @@ namespace BIGDQ
             int count = data_units.Count;
             int interval = Convert.ToInt32(count * ratio);
 
-            return data_units.Where((item, index) => index % interval == 0).ToList();   
+            return data_units.Where((item, index) => index % interval == 0).ToList();
         }
         public static Dictionary<string, object> Filter(Dictionary<string, object> data_unit, List<string> data_elements)
         {
@@ -50,7 +50,7 @@ namespace BIGDQ
                 throw new NotImplementedException();
 
             int score = 0;
-            foreach(Dictionary<string, object> unit in data_units)
+            foreach (Dictionary<string, object> unit in data_units)
             {
                 string key = Block(unit, quality_rule).ToString();
 
@@ -59,14 +59,14 @@ namespace BIGDQ
 
             }
 
-            return new BaseMeasure(quality_rule, rule_weight,  score / data_units.Count);
+            return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
         }
         public static DerivedMeasure DeriveMeasure(List<BaseMeasure> base_measures, QualityDimension dimension, double dimension_weight)
         {
 
             double score = base_measures.Sum(x => x.Score * x.Weight);
 
-            return new DerivedMeasure(dimension, dimension_weight,score);
+            return new DerivedMeasure(dimension, dimension_weight, score);
 
         }
         public static double Assess(List<DerivedMeasure> derived_measures)
@@ -98,9 +98,9 @@ namespace BIGDQ
         public static List<Tuple<Dictionary<string, object>, Dictionary<string, object>>> CrossApply(List<Dictionary<string, object>> list1, List<Dictionary<string, object>> list2)
         {
             var query = from lst1 in list1
-            from lst2 in list2
-            select new Tuple<Dictionary<string, object>,
-                Dictionary<string, object>>(lst1, lst2) ;
+                        from lst2 in list2
+                        select new Tuple<Dictionary<string, object>,
+                            Dictionary<string, object>>(lst1, lst2);
 
             return query.ToList();
         }
@@ -139,6 +139,18 @@ namespace BIGDQ
 
             Weight = weight;
             Score = score;
+        }
+    }
+    public static class PreProcessing
+    {
+        public static List<Dictionary<string, object>> ConvertTableToDictionaryList(DataTable source)
+        {
+            return source.AsEnumerable().Select(
+            row => source.Columns.Cast<DataColumn>().ToDictionary(
+            column => column.ColumnName,    // Key
+            column => row[column]  // Value
+                )
+            ).ToList();
         }
     }
 }
