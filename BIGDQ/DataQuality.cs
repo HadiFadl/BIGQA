@@ -8,7 +8,6 @@ namespace BIGDQ
 {
     public static class DataQuality
     {
-
         public enum QualityDimension
         {
             Completeness,
@@ -19,6 +18,7 @@ namespace BIGDQ
             Compliance,
             Understandability
         }
+
         #region Wrappers
 
         public static List<Dictionary<string, object>> Sample(List<Dictionary<string, object>> data_units, double ratio)
@@ -39,10 +39,12 @@ namespace BIGDQ
 
             return new_data_unit;
         }
-
-        public static double BaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, 
+        public static BaseMeasure BaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, double rule_weight,
             Dictionary<string, object> reference_data = null, string reference_key = null)
         {
+
+            if (rule_weight <= 0 || rule_weight > 1)
+                throw new Exception("weight value must be between 0 and 1");
 
             if (reference_data != null)
                 throw new NotImplementedException();
@@ -57,48 +59,19 @@ namespace BIGDQ
 
             }
 
-            return score / data_units.Count;
+            return new BaseMeasure(quality_rule, rule_weight,  score / data_units.Count);
         }
-
-        public static double DeriveMeasure(List<Dictionary<string,decimal>> base_measures, QualityDimension dimension)
+        public static DerivedMeasure DeriveMeasure(List<BaseMeasure> base_measures, QualityDimension dimension, double dimension_weight)
         {
-            switch (dimension)
-            {
-                case QualityDimension.Accuracy:
 
-                    break;
-                case QualityDimension.Completeness:
+            double score = base_measures.Sum(x => x.Score * x.Weight);
 
-                    break;
-                case QualityDimension.Compliance:
+            return new DerivedMeasure(dimension, dimension_weight,score);
 
-                    break;
-                case QualityDimension.Consistency:
-
-                    break;
-                case QualityDimension.Credibility:
-
-                    break;
-                case QualityDimension.Understandability:
-
-                    break;
-                case QualityDimension.Uniqueness:
-
-                    break;
-                default:
-                    throw new NotImplementedException();
-
-
-
-            }
-
-            return 0.0;
         }
-
-
-        public static double Assess(Dictionary<string, decimal> derived_measures)
+        public static double Assess(List<DerivedMeasure> derived_measures)
         {
-            return Convert.ToDouble(derived_measures.Values.Average());
+            return derived_measures.Sum(x => x.Score * x.Weight);
         }
         #endregion
 
@@ -133,5 +106,39 @@ namespace BIGDQ
         }
         #endregion
 
+    }
+    public class BaseMeasure
+    {
+        public string QualityRule { get; set; }
+        public double Weight { get; set; }
+        public double Score { get; set; }
+
+        public BaseMeasure(string rule, double weight, double score)
+        {
+            QualityRule = rule;
+
+            if (weight <= 0 || weight > 1)
+                throw new Exception("weight value must be between 0 and 1");
+
+            Weight = weight;
+            Score = score;
+        }
+
+    }
+    public class DerivedMeasure
+    {
+        public DataQuality.QualityDimension Name { get; set; }
+        public double Weight { get; set; }
+        public double Score { get; set; }
+        public DerivedMeasure(DataQuality.QualityDimension name, double weight, double score)
+        {
+            Name = name;
+
+            if (weight <= 0 || weight > 1)
+                throw new Exception("weight value must be between 0 and 1");
+
+            Weight = weight;
+            Score = score;
+        }
     }
 }
