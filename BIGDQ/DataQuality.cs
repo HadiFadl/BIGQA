@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using System.Data;
 using System;
 using System.Threading.Tasks;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
 
 namespace BIGDQ
 {
@@ -59,6 +61,18 @@ namespace BIGDQ
             return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
         }
 
+        public static List<Dictionary<string, object>> ParallelFilter(List<Dictionary<string, object>> data_units, List<string> data_elements)
+        {
+            List<Dictionary<string, object>> new_data_units = new List<Dictionary<string, object>>();
+
+            Parallel.ForEach(data_units, unit =>
+           {
+               new_data_units.Add(Filter(unit, data_elements));
+           });
+
+            return new_data_units;
+        }
+
         #endregion
 
         public static List<Dictionary<string, object>> Sample(List<Dictionary<string, object>> data_units, double ratio)
@@ -78,6 +92,17 @@ namespace BIGDQ
             }
 
             return new_data_unit;
+        }
+        public static List<Dictionary<string, object>> Filter(List<Dictionary<string, object>> data_units, List<string> data_elements)
+        {
+            List<Dictionary<string, object>> new_data_units = new List<Dictionary<string, object>>();
+
+            foreach (Dictionary<string, object> unit in data_units)
+            {
+                new_data_units.Add(Filter(unit,data_elements));
+            }
+
+            return new_data_units;
         }
         public static BaseMeasure BaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, double rule_weight,
             Dictionary<string, object> reference_data = null, string reference_key = null)
@@ -184,7 +209,7 @@ namespace BIGDQ
     }
     public static class PreProcessing
     {
-        public static List<Dictionary<string, object>> ConvertTableToDictionaryList(DataTable source)
+        public static List<Dictionary<string, object>> ConvertDataTableToDictionaryList(DataTable source)
         {
             return source.AsEnumerable().Select(
             row => source.Columns.Cast<DataColumn>().ToDictionary(
@@ -192,6 +217,35 @@ namespace BIGDQ
             column => row[column]  // Value
                 )
             ).ToList();
+        }
+        public static List<Dictionary<string, object>> ImportFlatFile(string path, string delimiter, bool qualified)
+        {
+            string[] headers;
+            List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
+            TextFieldParser tfpTxtParser = new TextFieldParser(path, System.Text.Encoding.Unicode);
+            tfpTxtParser.TextFieldType = FieldType.Delimited;
+            tfpTxtParser.SetDelimiters(delimiter);
+            tfpTxtParser.HasFieldsEnclosedInQuotes = qualified;
+
+            headers = tfpTxtParser.ReadFields();
+
+            while (!tfpTxtParser.EndOfData)
+            {
+                result.Add(ConvertArrayToDictionaryList(headers, tfpTxtParser.ReadFields()));
+            }
+
+            return result;
+        }
+        private static Dictionary<string,object> ConvertArrayToDictionaryList(string[] header, string[] values)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                result.Add(header[i], values[i]);
+            }
+
+            return result;
         }
     }
 }
