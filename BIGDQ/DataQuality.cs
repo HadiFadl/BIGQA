@@ -27,11 +27,14 @@ namespace BIGDQ
         #region Parallel
         public static Dictionary<string, object> ParallelFilter(Dictionary<string, object> data_unit, List<string> data_elements)
         {
-            Dictionary<string, object> new_data_unit = data_unit;
+            Dictionary<string, object> new_data_unit = new Dictionary<string, object>();
 
-            Parallel.ForEach(data_elements, element =>
+            Parallel.ForEach(data_unit.Keys, key =>
             {
-                new_data_unit.Remove(element);
+                if (data_elements.Contains(key))
+                {
+                    new_data_unit.Add(key, data_unit[key]);
+                }
             });
 
             return new_data_unit;
@@ -78,20 +81,22 @@ namespace BIGDQ
         public static List<Dictionary<string, object>> Sample(List<Dictionary<string, object>> data_units, double ratio)
         {
             int count = data_units.Count;
-            int interval = Convert.ToInt32(count * ratio);
+            int interval = Convert.ToInt32(100 * ratio);
 
             return data_units.Where((item, index) => index % interval == 0).ToList();
         }
         public static Dictionary<string, object> Filter(Dictionary<string, object> data_unit, List<string> data_elements)
         {
-            Dictionary<string, object> new_data_unit = data_unit;
+            Dictionary<string, object> new_data_unit = new Dictionary<string, object>(); ;
 
-            foreach (string element in data_elements)
+            foreach(string key in data_unit.Keys)
             {
-                new_data_unit.Remove(element);
+                if (data_elements.Contains(key))
+                {
+                    new_data_unit.Add(key, data_unit[key]);
+                }
             }
-
-            return new_data_unit;
+           return new_data_unit;
         }
         public static List<Dictionary<string, object>> Filter(List<Dictionary<string, object>> data_units, List<string> data_elements)
         {
@@ -114,7 +119,7 @@ namespace BIGDQ
             if (reference_data != null)
                 throw new NotImplementedException();
 
-            int score = 0;
+            double score = 0;
             foreach (Dictionary<string, object> unit in data_units)
             {
                 string key = Block(unit, quality_rule).ToString();
@@ -149,7 +154,7 @@ namespace BIGDQ
         private static object Block(Dictionary<string, object> data_unit, string quality_rule)
         {
             string element = GetElement(quality_rule);
-            return data_unit[element];
+            return data_unit[element.TrimStart('[').TrimEnd(']')] ;
         }
         private static string GetElement(string quality_rule)
         {
@@ -157,7 +162,7 @@ namespace BIGDQ
         }
         private static bool Evaluate(string quality_rule, string value)
         {
-            string new_expression = Regex.Replace(quality_rule, @"\[(.*?)\]", value);
+            string new_expression = Regex.Replace(quality_rule, @"\[(.*?)\]","'" +  value.Replace("'","") + "'");
             var result = new DataTable().Compute(new_expression, "");
             return (bool)result;
         }
@@ -231,7 +236,15 @@ namespace BIGDQ
 
             while (!tfpTxtParser.EndOfData)
             {
-                result.Add(ConvertArrayToDictionaryList(headers, tfpTxtParser.ReadFields()));
+                try
+                {
+                    result.Add(ConvertArrayToDictionaryList(headers, tfpTxtParser.ReadFields()));
+                }
+                catch
+                {
+
+                }
+                
             }
 
             return result;

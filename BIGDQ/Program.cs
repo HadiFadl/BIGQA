@@ -18,10 +18,10 @@ namespace BIGDQ
             
             List<Dictionary<string, object>> filtered_units = DataQuality.Filter(sample_units, new List<string> { "Age", "CreationDate", "DisplayName", "Location", "Reputation" });
 
-            MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "Age <> ''", 0.5));
-            MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "DisplayName <> ''", 0.5));
-            MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "Reputation <> 0", 1));
-            MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "CreationDate <> '19000101'", 1));
+            MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[Age] <> ''", 0.75));
+            MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] <> ''", 0.25));
+            MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[Reputation] <> 0", 0.5));
+            MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] <> '19000101'", 0.5));
 
             DerivedMeasures.Add(DataQuality.DeriveMeasure(MeasureGroup1, DataQuality.QualityDimension.Completeness, 0.75));
             DerivedMeasures.Add(DataQuality.DeriveMeasure(MeasureGroup2, DataQuality.QualityDimension.Accuracy, 0.25));
