@@ -4,8 +4,8 @@ using System.Text.RegularExpressions;
 using System.Data;
 using System;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.FileIO;
+using System.Threading;
 
 namespace BIGDQ
 {
@@ -19,7 +19,8 @@ namespace BIGDQ
             Consistency,
             Credibility,
             Compliance,
-            Understandability
+            Understandability,
+            Currentness
         }
 
         #region Wrappers
@@ -43,7 +44,7 @@ namespace BIGDQ
         public static BaseMeasure ParallelBaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, double rule_weight,
             Dictionary<string, object> reference_data = null, string reference_key = null)
         {
-
+            try { 
             if (rule_weight <= 0 || rule_weight > 1)
                 throw new Exception("weight value must be between 0 and 1");
 
@@ -54,14 +55,23 @@ namespace BIGDQ
 
             Parallel.ForEach(data_units, unit =>
             {
-                string key = Block(unit, quality_rule).ToString();
+                string element = "";
+                string key = Block(unit, quality_rule,ref element).ToString();
 
-                if (Evaluate(quality_rule, key))
-                    score += 1;
+                if (key != "" && Evaluate(quality_rule, element, key)){ 
+                    Interlocked.Increment(ref score); 
+                }
 
             });
+                return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
 
-            return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+
+            
         }
 
         public static List<Dictionary<string, object>> ParallelFilter(List<Dictionary<string, object>> data_units, List<string> data_elements)
@@ -80,8 +90,17 @@ namespace BIGDQ
 
         public static List<Dictionary<string, object>> Sample(List<Dictionary<string, object>> data_units, double ratio)
         {
+            if (ratio == 1)
+                return data_units;
+
+            if (ratio == 0)
+                return new List<Dictionary<string, object>>();
+
+            if (ratio < 0 || ratio > 1)
+                throw new Exception("Ratio must be between 0 and 1");
+
             int count = data_units.Count;
-            int interval = Convert.ToInt32(100 * ratio);
+            int interval = Convert.ToInt32(1 / ratio);
 
             return data_units.Where((item, index) => index % interval == 0).ToList();
         }
@@ -122,9 +141,10 @@ namespace BIGDQ
             double score = 0;
             foreach (Dictionary<string, object> unit in data_units)
             {
-                string key = Block(unit, quality_rule).ToString();
+                string element = "";
+                string key = Block(unit, quality_rule, ref element).ToString();
 
-                if (Evaluate(quality_rule, key))
+                if (key != "" && Evaluate(quality_rule, element, key))
                     score += 1;
 
             }
@@ -151,18 +171,28 @@ namespace BIGDQ
         {
             return list_of_units.OrderBy(x => x[sorting_key]).ToList();
         }
-        private static object Block(Dictionary<string, object> data_unit, string quality_rule)
+        private static object Block(Dictionary<string, object> data_unit, string quality_rule, ref string element)
         {
-            string element = GetElement(quality_rule);
-            return data_unit[element.TrimStart('[').TrimEnd(']')] ;
+            if (data_unit == null)
+                return "";
+
+            try
+            {
+                element = GetElement(quality_rule);
+                return data_unit[element.TrimStart('[').TrimEnd(']')];
+            }catch
+            {
+                return "";
+            }
+
         }
         private static string GetElement(string quality_rule)
         {
             return Regex.Match(quality_rule, @"\[(.*?)\]").Value;
         }
-        private static bool Evaluate(string quality_rule, string value)
+        private static bool Evaluate(string quality_rule, string element,  string value)
         {
-            string new_expression = Regex.Replace(quality_rule, @"\[(.*?)\]","'" +  value.Replace("'","") + "'");
+            string new_expression = quality_rule.Replace(element,"'" +  value.Replace("'","") + "'");
             var result = new DataTable().Compute(new_expression, "");
             return (bool)result;
         }
