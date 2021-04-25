@@ -58,8 +58,8 @@ namespace BIGDQ
                 string element = "";
                 string key = Block(unit, quality_rule,ref element).ToString();
 
-                if (key != "" && Evaluate(quality_rule, element, key)){ 
-                    Interlocked.Increment(ref score); 
+                if (key != "" && Evaluate(quality_rule, element, key)){
+                    score++;
                 }
 
             });

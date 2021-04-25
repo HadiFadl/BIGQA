@@ -37,7 +37,7 @@ namespace BIGDQ
         public static void RunSingleThreaded(List<Dictionary<string, object>> data_units)
         {
             DateTime startdate = DateTime.Now;
-            double Sampling_ratio = 0.1;
+            
             List<BaseMeasure> MeasureGroup1 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup2 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup3 = new List<BaseMeasure>();
@@ -91,7 +91,7 @@ namespace BIGDQ
         public static void RunParallelLoops(List<Dictionary<string, object>> data_units)
         {
             DateTime startdate = DateTime.Now;
-            double Sampling_ratio = 0.1;
+            
             List<BaseMeasure> MeasureGroup1 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup2 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup3 = new List<BaseMeasure>();
@@ -148,7 +148,7 @@ namespace BIGDQ
         public static void RunMultiThreaded(List<Dictionary<string, object>> data_units)
         {
             DateTime startdate = DateTime.Now;
-            double Sampling_ratio = 0.1;
+            
             List<BaseMeasure> MeasureGroup1 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup2 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup3 = new List<BaseMeasure>();
@@ -161,12 +161,12 @@ namespace BIGDQ
 
 
             int counter = 0;
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[Age] <> ''", 0.75)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] <> ''", 0.25)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[Reputation] <> 0", 0.5)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] <> '19000101'", 0.5)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup3.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] NOT LIKE '2010*'", 1)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup4.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] NOT LIKE '*$*'", 1)); Interlocked.Increment(ref counter); });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[Age] <> ''", 0.75)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] <> ''", 0.25)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[Reputation] <> 0", 0.5)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] <> '19000101'", 0.5)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup3.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] NOT LIKE '2010*'", 1)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup4.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] NOT LIKE '*$*'", 1)); counter++; });
 
 
             while (counter < 6)
@@ -213,7 +213,7 @@ namespace BIGDQ
         public static void RunMultiThreadedParallel(List<Dictionary<string, object>> data_units)
         {
             DateTime startdate = DateTime.Now;
-            double Sampling_ratio = 0.1;
+            
             List<BaseMeasure> MeasureGroup1 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup2 = new List<BaseMeasure>();
             List<BaseMeasure> MeasureGroup3 = new List<BaseMeasure>();
@@ -226,12 +226,12 @@ namespace BIGDQ
 
 
             int counter = 0;
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[Age] <> ''", 0.75)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[DisplayName] <> ''", 0.25)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[Reputation] <> 0", 0.5)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[CreationDate] <> '19000101'", 0.5)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup3.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] NOT LIKE '2010*'", 1)); Interlocked.Increment(ref counter); });
-            ThreadPool.QueueUserWorkItem(state => { MeasureGroup4.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] NOT LIKE '*$*'", 1)); Interlocked.Increment(ref counter); });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[Age] <> ''", 0.75)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup1.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[DisplayName] <> ''", 0.25)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[Reputation] <> 0", 0.5)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup2.Add(DataQuality.ParallelBaseMeasure(filtered_units, "[CreationDate] <> '19000101'", 0.5)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup3.Add(DataQuality.BaseMeasure(filtered_units, "[CreationDate] NOT LIKE '2010*'", 1)); counter++; });
+            ThreadPool.QueueUserWorkItem(state => { MeasureGroup4.Add(DataQuality.BaseMeasure(filtered_units, "[DisplayName] NOT LIKE '*$*'", 1)); counter++; });
 
 
             while (counter < 4)
