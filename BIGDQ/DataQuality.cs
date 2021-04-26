@@ -5,12 +5,13 @@ using System.Data;
 using System;
 using System.Threading.Tasks;
 using Microsoft.VisualBasic.FileIO;
-using System.Threading;
 
 namespace BIGDQ
 {
     public static class DataQuality
     {
+
+        static DataTable dt = new DataTable();
         public enum QualityDimension
         {
             Completeness,
@@ -44,34 +45,38 @@ namespace BIGDQ
         public static BaseMeasure ParallelBaseMeasure(List<Dictionary<string, object>> data_units, string quality_rule, double rule_weight,
             Dictionary<string, object> reference_data = null, string reference_key = null)
         {
-            try { 
-            if (rule_weight <= 0 || rule_weight > 1)
-                throw new Exception("weight value must be between 0 and 1");
 
-            if (reference_data != null)
-                throw new NotImplementedException();
 
-            int score = 0;
-
-            Parallel.ForEach(data_units, unit =>
+            try
             {
-                string element = "";
-                string key = Block(unit, quality_rule,ref element).ToString();
+                if (rule_weight <= 0 || rule_weight > 1)
+                    throw new Exception("weight value must be between 0 and 1");
 
-                if (key != "" && Evaluate(quality_rule, element, key)){
-                    score++;
-                }
+                if (reference_data != null)
+                    throw new NotImplementedException();
 
-            });
+                int score = 0;
+
+                Parallel.ForEach(data_units, unit =>
+                {
+                    string element = "";
+                    string key = Block(unit, quality_rule, ref element).ToString();
+
+                    if (key != "" && Evaluate(quality_rule, element, key))
+                    {
+                        score++;
+                    }
+
+                });
                 return new BaseMeasure(quality_rule, rule_weight, score / data_units.Count);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
 
-            
+
         }
 
         public static List<Dictionary<string, object>> ParallelFilter(List<Dictionary<string, object>> data_units, List<string> data_elements)
@@ -79,11 +84,28 @@ namespace BIGDQ
             List<Dictionary<string, object>> new_data_units = new List<Dictionary<string, object>>();
 
             Parallel.ForEach(data_units, unit =>
-           {
-               new_data_units.Add(Filter(unit, data_elements));
-           });
+            {
+                new_data_units.Add(Filter(unit, data_elements));
+            });
 
             return new_data_units;
+        }
+
+        public static List<Dictionary<string, object>> ParallelSample(List<Dictionary<string, object>> data_units, double ratio)
+        {
+            if (ratio == 1)
+                return data_units;
+
+            if (ratio == 0)
+                return new List<Dictionary<string, object>>();
+
+            if (ratio < 0 || ratio > 1)
+                throw new Exception("Ratio must be between 0 and 1");
+
+            int count = data_units.Count;
+            int interval = Convert.ToInt32(1 / ratio);
+
+            return data_units.AsParallel().Where((item, index) => index % interval == 0).ToList();
         }
 
         #endregion
@@ -108,14 +130,14 @@ namespace BIGDQ
         {
             Dictionary<string, object> new_data_unit = new Dictionary<string, object>(); ;
 
-            foreach(string key in data_unit.Keys)
+            foreach (string key in data_unit.Keys)
             {
                 if (data_elements.Contains(key))
                 {
                     new_data_unit.Add(key, data_unit[key]);
                 }
             }
-           return new_data_unit;
+            return new_data_unit;
         }
         public static List<Dictionary<string, object>> Filter(List<Dictionary<string, object>> data_units, List<string> data_elements)
         {
@@ -123,7 +145,7 @@ namespace BIGDQ
 
             foreach (Dictionary<string, object> unit in data_units)
             {
-                new_data_units.Add(Filter(unit,data_elements));
+                new_data_units.Add(Filter(unit, data_elements));
             }
 
             return new_data_units;
@@ -145,7 +167,7 @@ namespace BIGDQ
                 string key = Block(unit, quality_rule, ref element).ToString();
 
                 if (key != "" && Evaluate(quality_rule, element, key))
-                    score += 1;
+                    score++;
 
             }
 
@@ -180,7 +202,8 @@ namespace BIGDQ
             {
                 element = GetElement(quality_rule);
                 return data_unit[element.TrimStart('[').TrimEnd(']')];
-            }catch
+            }
+            catch
             {
                 return "";
             }
@@ -190,10 +213,10 @@ namespace BIGDQ
         {
             return Regex.Match(quality_rule, @"\[(.*?)\]").Value;
         }
-        private static bool Evaluate(string quality_rule, string element,  string value)
+        private static bool Evaluate(string quality_rule, string element, string value)
         {
-            string new_expression = quality_rule.Replace(element,"'" +  value.Replace("'","") + "'");
-            var result = new DataTable().Compute(new_expression, "");
+            string new_expression = quality_rule.Replace(element, "'" + value.Replace("'", "") + "'");
+            var result = dt.Compute(new_expression, "");
             return (bool)result;
         }
         public static List<Tuple<Dictionary<string, object>, Dictionary<string, object>>> CrossApply(List<Dictionary<string, object>> list1, List<Dictionary<string, object>> list2)
@@ -214,6 +237,7 @@ namespace BIGDQ
         public double Weight { get; set; }
         public double Score { get; set; }
 
+        public double time { get; set; }
         public BaseMeasure(string rule, double weight, double score)
         {
             QualityRule = rule;
@@ -223,6 +247,7 @@ namespace BIGDQ
 
             Weight = weight;
             Score = score;
+
         }
 
     }
@@ -231,6 +256,8 @@ namespace BIGDQ
         public DataQuality.QualityDimension Name { get; set; }
         public double Weight { get; set; }
         public double Score { get; set; }
+        public double time { get; set; }
+
         public DerivedMeasure(DataQuality.QualityDimension name, double weight, double score)
         {
             Name = name;
@@ -274,12 +301,12 @@ namespace BIGDQ
                 {
 
                 }
-                
+
             }
 
             return result;
         }
-        private static Dictionary<string,object> ConvertArrayToDictionaryList(string[] header, string[] values)
+        private static Dictionary<string, object> ConvertArrayToDictionaryList(string[] header, string[] values)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
 
