@@ -317,7 +317,6 @@ A function used to import a flat file into a list of dictionaries (key-value lis
 
 #### Returns
 
-----------------------------
 
 --------------------------------------
 
