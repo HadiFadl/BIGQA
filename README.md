@@ -99,12 +99,6 @@ The implementation of the DerivedMeasure wrapper component.
 
 A DerivedMeasure class that contains all metadata of the derived measure and the measured score
 
-
-### F:BIGDQ.dt
-
-This DataTable is only used to evaluate data quality rules using DataTable.Compute() function
-
-
 ### M:BIGDQ.Evaluate(quality_rule, element, value)
 
 A function used to evaluate a given data quality rule for a specific element value
@@ -227,12 +221,6 @@ The ParallelSample function is the parallel implementation of the Sample() wrapp
 
 It returns a subset of the original data set where the Subset Size = ratio * DataSet Size 
 
-
-## DataQuality.QualityDimension
-
-In this enumerator we list all supported data quality dimensions
-
-
 ### M:BIGDQ.DataQuality.Sample(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}},System.Double)
 
 The Sample function is the implementation of the Sample() wrapper which is used to perform data sampling on a list of data units. We used a basic data sampling function that pick data units randomly from the original data set
@@ -287,8 +275,6 @@ A function used to convert a array of string into a list of key-value pairs
 
 
 #### Returns
-
-
 
 
 ### M:BIGDQ.ConvertDataTableToDictionaryList(source)
