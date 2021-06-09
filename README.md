@@ -1,6 +1,6 @@
 # BIGQA: Declarative Big Data Quality Assessment
 
-This is a C# console application used to demonstrate our research project BIGDQ. 
+This is a C# console application used to demonstrate our research project BIGQA. 
 
 *This documentation is generated using [Generates Markdown From VisualStudio XML documentation files (github.com)](https://gist.github.com/formix/515d3d11ee7c1c252f92)*
 
